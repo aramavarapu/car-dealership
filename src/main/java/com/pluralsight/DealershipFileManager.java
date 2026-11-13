@@ -49,7 +49,7 @@ public class DealershipFileManager {
             writer.newLine();
 
             for (Vehicle vehicle : dealership.getAllVehicles()) {
-                writer.write(vehicle.getVin() + "|" + vehicle.getMake() + "|" + vehicle.getModel() + "|" + vehicle.getVehicleType() + "|" + vehicle.getColor() + "|" + vehicle.getOdometer() + "|" + vehicle.getPrice().toPlainString());
+                writer.write(vehicle.getVin() + "|" + vehicle.getYear() + "|" + vehicle.getMake() + "|" + vehicle.getModel() + "|" + vehicle.getVehicleType() + "|" + vehicle.getColor() + "|" + vehicle.getOdometer() + "|" + vehicle.getPrice().toPlainString());
                 writer.newLine();
             }
         } catch (IOException e) {

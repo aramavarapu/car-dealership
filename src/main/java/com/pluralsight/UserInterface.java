@@ -1,9 +1,11 @@
 package com.pluralsight;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Scanner;
 public class UserInterface {
 
     private Dealership dealership;
+    private DealershipFileManager fileManager;
     private final Scanner scanner = new Scanner(System.in);
 
     public UserInterface() {
@@ -63,7 +65,7 @@ public class UserInterface {
     }
 
     private void init() {
-        DealershipFileManager fileManager = new DealershipFileManager();
+        fileManager = new DealershipFileManager();
         this.dealership = fileManager.getDealership();
     }
 
@@ -89,33 +91,108 @@ public class UserInterface {
             return;
         }
 
+        System.out.printf("%-8s %-6s %-10s %-12s %-8s %-8s %-10s %10s%n",
+                "VIN", "Year", "Make", "Model", "Type", "Color", "Mileage", "Price");
+        System.out.println("-".repeat(80));
+
         for (Vehicle vehicle : vehicles) {
-            System.out.printf("%d | %d | %s | %s | %s | %s | %d miles | $%s%n", vehicle.getVin(), vehicle.getYear(), vehicle.getMake(), vehicle.getModel(), vehicle.getVehicleType(), vehicle.getColor(), vehicle.getOdometer(), vehicle.getPrice());
+            System.out.printf("%-8d %-6d %-10s %-12s %-8s %-8s %-10d %10s%n", vehicle.getVin(), vehicle.getYear(), vehicle.getMake(), vehicle.getModel(), vehicle.getVehicleType(), vehicle.getColor(), vehicle.getOdometer(), "$" + vehicle.getPrice());
+        }
+    }
+
+    private String readText(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
+    }
+
+    private int readInt(String prompt) {
+        while (true) {
+            try {
+                return Integer.parseInt(readText(prompt));
+            } catch (NumberFormatException e) {
+                System.out.println("Enter a whole number");
+            }
+        }
+    }
+
+    private BigDecimal readPrice(String prompt) {
+        while (true) {
+            try {
+                return new BigDecimal(readText(prompt));
+            } catch (NumberFormatException e) {
+                System.out.println("Enter a valid amount like, 7777.77");
+            }
         }
     }
 
     public void processGetByPriceRequest() {
+        BigDecimal min = readPrice("Minimum Price: ");
+        BigDecimal max = readPrice("Maximum Price: ");
+        displayVehicles(dealership.getVehiclesByPrice(min, max));
     }
 
     public void processGetByMakeModelRequest() {
+        String make = readText("Make: ");
+        String model = readText("Model: ");
+        displayVehicles(dealership.getVehiclesByMakeModel(make, model));
     }
 
     public void processGetByYearRequest() {
+        int min = readInt("Minimum Year: ");
+        int max = readInt("Maximum Year: ");
+        displayVehicles(dealership.getVehiclesByYear(min, max));
     }
 
     public void processGetByColorRequest() {
+        String color = readText("Color: ");
+        displayVehicles(dealership.getVehiclesByColor(color));
     }
 
     public void processGetByMileageRequest() {
+        int min = readInt("Minimum Mileage: ");
+        int max = readInt("Maximum Mileage: ");
+        displayVehicles(dealership.getVehiclesByMileage(min, max));
     }
 
     public void processGetByVehicleTypeRequest() {
+        String type = readText("Vehicle type (car, truck, SUV, and van)");
+        displayVehicles(dealership.getVehiclesByType(type));
     }
 
     public void processAddVehicleRequest() {
+        int vin = readInt("VIN: ");
+        int year = readInt("Year: ");
+        String make = readText("Make: ");
+        String model = readText("Model: ");
+        String type = readText("Vehicle type (car, truck, SUV, van): ");
+        String color = readText("Color: ");
+        int odometer = readInt("Odometer: ");
+        BigDecimal price = readPrice("Price: ");
+
+        dealership.addVehicle(new Vehicle(vin, year, make, model, type, color, odometer, price));
+        fileManager.saveDealership(dealership);
+        System.out.println("Vehicle added.");
     }
 
     public void processRemoveVehicleRequest() {
+        int vin = readInt("VIN of the vehicle to remove: ");
+
+        Vehicle match = null;
+        for (Vehicle vehicle : dealership.getAllVehicles()) {
+            if (vehicle.getVin() == vin) {
+                match = vehicle;
+                break;
+            }
+        }
+
+        if (match == null) {
+            System.out.println("No vehicle found with that VIN.");
+            return;
+        }
+
+        dealership.removeVehicle(match);
+        fileManager.saveDealership(dealership);
+        System.out.println("Vehicle removed.");
     }
 
     public void processGetAllVehiclesRequest() {
